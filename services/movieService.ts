@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { queryOptions, useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { apiRequest, TMDB_CONFIG } from "./api"; // Assuming api.ts is in the same directory
 
@@ -36,13 +36,7 @@ export type PopularMoviesApiResponse = z.infer<
   typeof PopularMoviesApiResponseSchema
 >;
 
-// --- Query Keys ---
-export const movieQueryKeys = {
-  popular: (page: number) => ["popularMovies", page] as const,
-  // Add other movie-related keys here, e.g., latest, details, search
-};
-
-// --- Service-Level Functions ---
+// --- Service-Level Functions (getPopularMovies remains the same) ---
 
 /**
  * Fetches popular movies from TMDB.
@@ -59,29 +53,45 @@ export const getPopularMovies = (
     params: {
       language: "en-US", // As per example
       page: page,
-      // api_key is handled by the Authorization header in apiRequest
     },
     headers: {
-      // TMDB specific headers
       accept: "application/json",
     },
   });
 };
 
-// --- Custom Hooks for Tanstack Query ---
+// --- Query Factory for Movies ---
+export const movieQueries = {
+  all: () => ["movies"] as const, // Base key for all movie-related queries
+  popularLists: () => [...movieQueries.all(), "popular"] as const,
+  popularList: (page: number = 1) =>
+    queryOptions({
+      queryKey: [...movieQueries.popularLists(), page] as const,
+      queryFn: () => getPopularMovies(page),
+      staleTime: 1000 * 60 * 5, // 5 minutes stale time example
+    }),
+  // Add other movie queries here, e.g., details, search, latest
+  // Example for movie details:
+  // details: () => [...movieQueries.all(), 'detail'] as const,
+  // detail: (id: number) =>
+  //   queryOptions({
+  //     queryKey: [...movieQueries.details(), id] as const,
+  //     queryFn: () => getMovieDetails(id), // Assuming getMovieDetails exists
+  //     staleTime: 1000 * 60 * 5,
+  //   }),
+};
+
+// --- Custom Hooks using Query Factory ---
 
 /**
- * Custom hook to fetch popular movies using Tanstack Query.
+ * Custom hook to fetch popular movies using Tanstack Query with queryOptions.
  * @param page - The page number to fetch.
- * @param options - Optional Tanstack Query options.
  * @returns The result of the useQuery hook.
  */
-export const usePopularMovies = (page: number = 1, options?: object) => {
-  return useQuery<PopularMoviesApiResponse, Error>({
-    queryKey: movieQueryKeys.popular(page),
-    queryFn: () => getPopularMovies(page),
-    ...options,
-  });
+export const usePopularMovies = (page: number = 1) => {
+  // The `options` parameter from the old hook can be spread into queryOptions if needed,
+  // or specific options like staleTime can be defined directly in the factory.
+  return useQuery(movieQueries.popularList(page));
 };
 
 // Helper function to construct full image URLs
