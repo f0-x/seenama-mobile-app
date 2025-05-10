@@ -16,6 +16,7 @@ interface LatestMovieCardProps {
 }
 
 const LatestMovieCard: React.FC<LatestMovieCardProps> = ({ item, onPress }) => {
+  console.log("HERE", item);
   return (
     <TouchableOpacity onPress={onPress} className="w-[48%] mb-5">
       <Image

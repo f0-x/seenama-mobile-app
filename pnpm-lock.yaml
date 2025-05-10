@@ -11,6 +11,9 @@ importers:
       '@expo/vector-icons':
         specifier: ^14.1.0
         version: 14.1.0(expo-font@13.3.1(expo@53.0.9(@babel/core@7.27.1)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.27.1)(@types/react@19.0.14)(react@19.0.0)))(react-native-webview@13.13.5(react-native@0.79.2(@babel/core@7.27.1)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      '@hookform/resolvers':
+        specifier: ^5.0.1
+        version: 5.0.1(react-hook-form@7.56.3(react@19.0.0))
       '@react-navigation/bottom-tabs':
         specifier: ^7.3.10
         version: 7.3.12(@react-navigation/native@7.1.8(react-native@0.79.2(@babel/core@7.27.1)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native-safe-area-context@5.4.0(react-native@0.79.2(@babel/core@7.27.1)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native-screens@4.10.0(react-native@0.79.2(@babel/core@7.27.1)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
@@ -20,6 +23,9 @@ importers:
       '@react-navigation/native':
         specifier: ^7.1.6
         version: 7.1.8(react-native@0.79.2(@babel/core@7.27.1)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      '@tanstack/react-query':
+        specifier: ^5.75.7
+        version: 5.75.7(react@19.0.0)
       expo:
         specifier: ~53.0.9
         version: 53.0.9(@babel/core@7.27.1)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.27.1)(@types/react@19.0.14)(react@19.0.0)))(react-native-webview@13.13.5(react-native@0.79.2(@babel/core@7.27.1)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
@@ -68,6 +74,9 @@ importers:
       react-dom:
         specifier: 19.0.0
         version: 19.0.0(react@19.0.0)
+      react-hook-form:
+        specifier: ^7.56.3
+        version: 7.56.3(react@19.0.0)
       react-native:
         specifier: 0.79.2
         version: 0.79.2(@babel/core@7.27.1)(@types/react@19.0.14)(react@19.0.0)
@@ -92,6 +101,9 @@ importers:
       tailwindcss:
         specifier: ^3.4.17
         version: 3.4.17
+      zod:
+        specifier: ^3.24.4
+        version: 3.24.4
     devDependencies:
       '@babel/core':
         specifier: ^7.25.2
@@ -751,6 +763,11 @@ packages:
     resolution: {integrity: sha512-ReZxZ8pdnoI3tP/dNnJdnmAk7uLT4FjsKDGW7YeDdvdOMz2XCQSmSCM9IWlrXuWtMF9zeSB6WJtEhCQ41gQOfw==}
     hasBin: true
 
+  '@hookform/resolvers@5.0.1':
+    resolution: {integrity: sha512-u/+Jp83luQNx9AdyW2fIPGY6Y7NG68eN2ZW8FOJYL+M0i4s49+refdJdOp/A9n9HFQtQs3HIDHQvX3ZET2o7YA==}
+    peerDependencies:
+      react-hook-form: ^7.55.0
+
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
     engines: {node: '>=18.18.0'}
@@ -998,6 +1015,17 @@ packages:
 
   '@sinonjs/fake-timers@10.3.0':
     resolution: {integrity: sha512-V4BG07kuYSUkTCSBHG8G8TNhM+F19jXFWnQtzj+we8DrkpSBCee9Z3Ms8yiGer/dlmhe35/Xdgyo3/0rQKg7YA==}
+
+  '@standard-schema/utils@0.3.0':
+    resolution: {integrity: sha512-e7Mew686owMaPJVNNLs55PUvgz371nKgwsc4vxE49zsODpJEnxgxRo2y/OKrqueavXgZNMDVj3DdHFlaSAeU8g==}
+
+  '@tanstack/query-core@5.75.7':
+    resolution: {integrity: sha512-4BHu0qnxUHOSnTn3ow9fIoBKTelh0GY08yn1IO9cxjBTsGvnxz1ut42CHZqUE3Vl/8FAjcHsj8RNJMoXvjgHEA==}
+
+  '@tanstack/react-query@5.75.7':
+    resolution: {integrity: sha512-JYcH1g5pNjKXNQcvvnCU/PueaYg05uKBDHlWIyApspv7r5C0BM12n6ysa2QF2T+1tlPnNXOob8vr8o96Nx0GxQ==}
+    peerDependencies:
+      react: ^18 || ^19
 
   '@tybys/wasm-util@0.9.0':
     resolution: {integrity: sha512-6+7nlbMVX/PVDCwaIQ8nTOPveOcFLSt8GcXdx8hD0bt39uWxYT88uXzqTd4fTvqta7oeUJqudepapKNt2DYJFw==}
@@ -3338,6 +3366,12 @@ packages:
     peerDependencies:
       react: '>=17.0.0'
 
+  react-hook-form@7.56.3:
+    resolution: {integrity: sha512-IK18V6GVbab4TAo1/cz3kqajxbDPGofdF0w7VHdCo0Nt8PrPlOZcuuDq9YYIV1BtjcX78x0XsldbQRQnQXWXmw==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      react: ^16.8.0 || ^17 || ^18 || ^19
+
   react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
 
@@ -5097,6 +5131,11 @@ snapshots:
       find-up: 5.0.0
       js-yaml: 4.1.0
 
+  '@hookform/resolvers@5.0.1(react-hook-form@7.56.3(react@19.0.0))':
+    dependencies:
+      '@standard-schema/utils': 0.3.0
+      react-hook-form: 7.56.3(react@19.0.0)
+
   '@humanfs/core@0.19.1': {}
 
   '@humanfs/node@0.16.6':
@@ -5451,6 +5490,15 @@ snapshots:
   '@sinonjs/fake-timers@10.3.0':
     dependencies:
       '@sinonjs/commons': 3.0.1
+
+  '@standard-schema/utils@0.3.0': {}
+
+  '@tanstack/query-core@5.75.7': {}
+
+  '@tanstack/react-query@5.75.7(react@19.0.0)':
+    dependencies:
+      '@tanstack/query-core': 5.75.7
+      react: 19.0.0
 
   '@tybys/wasm-util@0.9.0':
     dependencies:
@@ -8150,6 +8198,10 @@ snapshots:
   react-fast-compare@3.2.2: {}
 
   react-freeze@1.0.4(react@19.0.0):
+    dependencies:
+      react: 19.0.0
+
+  react-hook-form@7.56.3(react@19.0.0):
     dependencies:
       react: 19.0.0
 

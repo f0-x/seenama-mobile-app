@@ -1,5 +1,5 @@
 import LatestMovieCard from "@/components/LatestMovieCard";
-import PopularMovieCard from "@/components/PopularMovieCard";
+import PopularMoviesSection from "@/components/PopularMoviesSection"; // Import the new component
 import SearchBar from "@/components/search_bar";
 import { images } from "@/constants/images";
 import { useRouter } from "expo-router";
@@ -8,41 +8,7 @@ import { FlatList, Image, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const Home = () => {
-  const popularMoviesData = [
-    {
-      id: "pop1",
-      title: "Gladiator II",
-      genre: "Action • Movie",
-      image: images.highlight,
-      rating: 4.6,
-      rank: 1,
-    },
-    {
-      id: "pop2",
-      title: "Mufasa: The Lion King",
-      genre: "Action • Movie",
-      image: images.highlight,
-      rating: 4.6,
-      rank: 2,
-    },
-    {
-      id: "pop3",
-      title: "Moana 2",
-      genre: "Action • Movie",
-      image: images.highlight,
-      rating: 4.6,
-      rank: 3,
-    },
-    {
-      id: "pop4",
-      title: "Another Movie",
-      genre: "Drama • Movie",
-      image: images.highlight,
-      rating: 4.2,
-      rank: 4,
-    },
-  ];
-
+  // Remove popularMoviesData, it will be fetched by PopularMoviesSection
   const latestMoviesData = [
     {
       id: "lat1",
@@ -102,29 +68,45 @@ const Home = () => {
     },
   ];
 
-  const router = useRouter();
-
-  const renderPopularMovie = ({
-    item,
-  }: {
-    item: (typeof popularMoviesData)[0];
-  }) => (
-    <PopularMovieCard
-      item={item}
-      onPress={() => router.push(`/movies/${item.id}`)}
-    />
-  );
+  // Remove renderPopularMovie function, it's handled by PopularMoviesSection
 
   const renderLatestMovie = ({
     item,
   }: {
     item: (typeof latestMoviesData)[0];
   }) => (
+    // <TouchableOpacity className="w-[48%] mb-5">
+    //   <Image
+    //     source={item.image}
+    //     className="w-full h-60 rounded-lg"
+    //     resizeMode="cover"
+    //   />
+    //   <View className="absolute top-2 right-2 bg-black/60 p-1 rounded-full">
+    //     <View className="flex-row items-center px-1">
+    //       <Image
+    //         source={icons.star}
+    //         className="w-3 h-3 mr-1"
+    //         style={{ tintColor: "#FFD700" }}
+    //       />
+    //       <Text className="text-white text-xs font-semibold">
+    //         {item.rating}
+    //       </Text>
+    //     </View>
+    //   </View>
+    //   <Text className="text-white text-base font-medium mt-2" numberOfLines={1}>
+    //     {item.title}
+    //   </Text>
+    //   <Text className="text-gray-400 text-sm" numberOfLines={1}>
+    //     {item.genre}
+    //   </Text>
+    // </TouchableOpacity>
     <LatestMovieCard
       item={item}
       onPress={() => router.push(`/movies/${item.id}`)}
     />
   );
+
+  const router = useRouter();
 
   return (
     <SafeAreaView className="bg-primary flex-1">
@@ -149,25 +131,13 @@ const Home = () => {
 
         {/* Search Bar */}
         <SearchBar
-          onSearchBarPress={(e) => {
+          onSearchBarPress={() => {
             router.push("/search");
           }}
         />
 
         {/* Popular Movies Section */}
-        <View className="mb-8">
-          <Text className="text-white text-xl font-bold mb-4">
-            Popular movies
-          </Text>
-          <FlatList
-            data={popularMoviesData}
-            renderItem={renderPopularMovie}
-            keyExtractor={(item) => item.id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingRight: 10 }} // Ensure last item is not cut off
-          />
-        </View>
+        <PopularMoviesSection />
 
         {/* Latest Movies Section */}
         <View>
@@ -189,4 +159,5 @@ const Home = () => {
   );
 };
 
+// Remove StyleSheet if no longer used by this component
 export default Home;

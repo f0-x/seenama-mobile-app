@@ -29,7 +29,7 @@ const SearchBar = ({
           searchBarPlaceholder || "Search through 300+ movies online"
         }
         onPress={onSearchBarPress}
-        // onChangeText={() => {}}
+        onChangeText={() => {}}
         value=""
         placeholderTextColor="#9CA3AF"
         className="flex-1 text-white text-base h-6 p-0 font-sans" // Ensure TextInput height is controlled and padding is reset

@@ -21,35 +21,42 @@ const PopularMovieCard: React.FC<PopularMovieCardProps> = ({
   item,
   onPress,
 }) => {
-  return (
-    <TouchableOpacity onPress={onPress} className="mr-4 relative w-40">
-      <Image
-        source={item.image}
-        className="w-full h-56 rounded-lg"
-        resizeMode="cover"
-      />
-      <Image
-        source={images.rankingGradient}
-        className="absolute bottom-0 left-[-10px] w-16 h-32"
-        resizeMode="contain"
-      />
-      <Text
-        className="absolute bottom-3 left-[-2px] text-white text-6xl font-extrabold"
-        style={styles.textShadow}
-      >
-        {item.rank}
-      </Text>
+  // Determine the correct image source format
+  const imageSource =
+    typeof item.image === "string" ? { uri: item.image } : item.image;
 
-      <View className="absolute bottom-1 right-1 bg-black/60 p-1 rounded-md">
-        <View className="flex-row items-center">
-          <Image
-            source={icons.star}
-            className="w-3 h-3 mr-1"
-            style={{ tintColor: "#FFD700" }}
-          />
-          <Text className="text-white text-xs font-semibold">
-            {item.rating}
-          </Text>
+  return (
+    <TouchableOpacity onPress={onPress} className="mr-4 w-36">
+      {/* Adjusted width, removed explicit height */}
+      <View className="relative">
+        {/* Container for Image and its overlays */}
+        <Image
+          source={imageSource}
+          className="w-full h-56 rounded-lg bg-gray-800"
+          resizeMode="cover"
+        />
+        <Image
+          source={images.rankingGradient}
+          className="absolute bottom-0 left-[-10px] w-16 h-32"
+          resizeMode="contain"
+        />
+        <Text
+          className="absolute bottom-3 left-[-2px] text-white text-6xl font-extrabold"
+          style={styles.textShadow}
+        >
+          {item.rank}
+        </Text>
+        <View className="absolute bottom-1 right-1 bg-black/60 p-1 rounded-md">
+          <View className="flex-row items-center">
+            <Image
+              source={icons.star}
+              className="w-3 h-3 mr-1"
+              style={{ tintColor: "#FFD700" }}
+            />
+            <Text className="text-white text-xs font-semibold">
+              {item.rating}
+            </Text>
+          </View>
         </View>
       </View>
       <Text className="text-white text-sm font-semibold mt-2" numberOfLines={1}>
