@@ -16,10 +16,13 @@ interface LatestMovieCardProps {
 }
 
 const LatestMovieCard: React.FC<LatestMovieCardProps> = ({ item, onPress }) => {
+  // Determine the correct image source format
+  const imageSource =
+    typeof item.image === "string" ? { uri: item.image } : item.image;
   return (
     <TouchableOpacity onPress={onPress} className="w-[48%] mb-5">
       <Image
-        source={item.image}
+        source={imageSource}
         className="w-full h-60 rounded-lg"
         resizeMode="cover"
       />

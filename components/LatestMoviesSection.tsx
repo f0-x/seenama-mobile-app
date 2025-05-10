@@ -1,35 +1,34 @@
-import { images } from "@/constants/images"; // For placeholder or if needed by PopularMovieCard directly
+import { images } from "@/constants/images"; // For placeholder image
 import {
   Genre,
   getImageUrl,
-  PopularMovieItem as PopularMovieItemType,
-  useMovieGenres,
-  usePopularMovies,
+  PopularMovieItem as LatestMovieItemType, // Reusing PopularMovieItemType as structure is same
+  useLatestMovies,
+  useMovieGenres, // Import the new hook
 } from "@/services/movieService";
-import { useRouter } from "expo-router";
+import { useRouter } from "expo-router"; // Import useRouter
 import React, { useMemo } from "react"; // Import useMemo
 import { ActivityIndicator, FlatList, Text, View } from "react-native";
-import PopularMovieCard from "./PopularMovieCard";
+import LatestMovieCard from "./LatestMovieCard";
 
-// Define the type for the item prop in renderPopularMovie
-// This should match the structure expected by PopularMovieCard
-interface PopularMovieCardDataType {
-  id: string; // PopularMovieCard expects string id
+// Define the type for the item prop in LatestMovieCard
+// This should match the structure expected by LatestMovieCard
+interface LatestMovieCardDataType {
+  id: string;
   title: string;
-  genre: string; // Construct this if not directly available or simplify
-  image: any; // Source for Image component
+  genre: string;
+  image: any;
   rating: number;
-  rank: number; // PopularMovieCard expects rank
 }
 
-const PopularMoviesSection: React.FC = () => {
-  const router = useRouter();
+const LatestMoviesSection: React.FC = () => {
+  const router = useRouter(); // Initialize router
   const {
-    data: popularMoviesData,
+    data: latestMoviesData,
     isLoading: isLoadingMovies,
     error: moviesError,
     isError: isMoviesError,
-  } = usePopularMovies(1);
+  } = useLatestMovies(1);
 
   const {
     data: genresData,
@@ -50,29 +49,22 @@ const PopularMoviesSection: React.FC = () => {
     return (
       genreIds
         .map((id) => genreMap.get(id))
-        .filter(Boolean) // Remove undefined if a genre ID isn't found
-        .slice(0, 2) // Take up to 2 genre names
+        .filter(Boolean)
+        .slice(0, 2)
         .join(" • ") || "Movie"
-    ); // Join with a separator
+    );
   };
 
-  const renderPopularMovie = ({
-    item,
-    index,
-  }: {
-    item: PopularMovieItemType;
-    index: number;
-  }) => {
-    const cardData: PopularMovieCardDataType = {
+  const renderLatestMovieItem = ({ item }: { item: LatestMovieItemType }) => {
+    const cardData: LatestMovieCardDataType = {
       id: String(item.id),
       title: item.title,
       genre: getGenreNames(item.genre_ids),
       image: getImageUrl(item.poster_path, "w500") || images.highlight,
       rating: item.vote_average,
-      rank: index + 1,
     };
     return (
-      <PopularMovieCard
+      <LatestMovieCard
         item={cardData}
         onPress={() => router.push(`/movies/${item.id}`)}
       />
@@ -81,22 +73,22 @@ const PopularMoviesSection: React.FC = () => {
 
   if (isLoadingMovies || isLoadingGenres) {
     return (
-      <View className="mb-8 h-72 flex-1 justify-center items-center">
+      <View className="mb-8 min-h-[300px] flex-1 justify-center items-center">
         <ActivityIndicator size="large" color="#FFFFFF" />
       </View>
     );
   }
 
-  // Combined error state or empty results state
   if (
     isMoviesError ||
     isGenresError ||
     (!isLoadingMovies &&
-      popularMoviesData &&
-      popularMoviesData.results.length === 0)
+      latestMoviesData &&
+      latestMoviesData.results.length === 0)
   ) {
-    let errorMessage = "Could not load popular movies. Please try again later.";
+    let errorMessage = "Could not load latest movies. Please try again later.";
     let specificError = "";
+
     if (isMoviesError && moviesError && "message" in moviesError) {
       specificError = (moviesError as any).message;
     } else if (isGenresError && genresError && "message" in genresError) {
@@ -105,33 +97,29 @@ const PopularMoviesSection: React.FC = () => {
 
     if (
       !isLoadingMovies &&
-      popularMoviesData &&
-      popularMoviesData.results.length === 0 &&
+      latestMoviesData &&
+      latestMoviesData.results.length === 0 &&
       !isMoviesError &&
       !isGenresError
     ) {
-      // Handle empty results specifically
       return (
         <View className="mb-8">
           <Text className="text-white text-xl font-bold mb-4">
-            Popular movies
+            Latest movies
           </Text>
-          <View className="h-[290px] flex justify-center items-center bg-gray-800/30 rounded-lg p-4 border border-gray-700/50">
+          <View className="min-h-[300px] flex justify-center items-center bg-gray-800/30 rounded-lg p-4 border border-gray-700/50">
             <Text className="text-gray-300 text-center">
-              No popular movies found at the moment.
+              No latest movies found at the moment.
             </Text>
           </View>
         </View>
       );
     }
 
-    // Handle actual fetch errors
     return (
       <View className="mb-8">
-        <Text className="text-white text-xl font-bold mb-4">
-          Popular movies
-        </Text>
-        <View className="h-[290px] flex justify-center items-center bg-red-900/30 rounded-lg p-4 border border-red-700/50">
+        <Text className="text-white text-xl font-bold mb-4">Latest movies</Text>
+        <View className="min-h-[300px] flex justify-center items-center bg-red-900/30 rounded-lg p-4 border border-red-700/50">
           <Text className="text-red-300 text-center font-semibold">
             Oops! Something went wrong.
           </Text>
@@ -148,29 +136,34 @@ const PopularMoviesSection: React.FC = () => {
     );
   }
 
-  if (!popularMoviesData?.results) {
-    // Fallback if data is still not available after loading and no error
+  if (!latestMoviesData?.results || latestMoviesData.results.length === 0) {
     return (
-      <View className="mb-8 h-72 flex-1 justify-center items-center">
-        {/* Minimal placeholder or can be empty */}
+      <View className="mb-8">
+        <Text className="text-white text-xl font-bold mb-4">Latest movies</Text>
+        <View className="min-h-[300px] flex justify-center items-center bg-gray-800/30 rounded-lg p-4 border border-gray-700/50">
+          <Text className="text-gray-300 text-center">
+            No latest movies available.
+          </Text>
+        </View>
       </View>
     );
   }
 
   return (
-    <View className="mb-8">
-      <Text className="text-white text-xl font-bold mb-4">Popular movies</Text>
+    <View>
+      <Text className="text-white text-xl font-bold mb-4">Latest movies</Text>
       <FlatList
-        data={popularMoviesData.results}
-        renderItem={renderPopularMovie}
+        data={latestMoviesData.results}
+        renderItem={renderLatestMovieItem}
         keyExtractor={(item) => String(item.id)}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingRight: 10 }}
-        style={{ height: 290 }}
+        numColumns={2}
+        columnWrapperStyle={{ justifyContent: "space-between" }}
+        showsVerticalScrollIndicator={false}
+        scrollEnabled={false} // As it's inside a ScrollView
+        // The height of this FlatList will be determined by its content.
       />
     </View>
   );
 };
 
-export default PopularMoviesSection;
+export default LatestMoviesSection;
