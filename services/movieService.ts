@@ -46,6 +46,54 @@ export const MovieGenresApiResponseSchema = z.object({
   genres: z.array(GenreSchema),
 });
 
+// Schemas for Movie Details
+const ProductionCompanySchema = z.object({
+  id: z.number(),
+  logo_path: z.string().nullable(),
+  name: z.string(),
+  origin_country: z.string(),
+});
+
+const ProductionCountrySchema = z.object({
+  iso_3166_1: z.string(),
+  name: z.string(),
+});
+
+const SpokenLanguageSchema = z.object({
+  english_name: z.string(),
+  iso_639_1: z.string(),
+  name: z.string(),
+});
+
+export const MovieDetailSchema = z.object({
+  adult: z.boolean(),
+  backdrop_path: z.string().nullable(),
+  belongs_to_collection: z.object({}).nullable().or(z.any()), // Can be more specific if needed
+  budget: z.number(),
+  genres: z.array(GenreSchema), // Uses the existing GenreSchema
+  homepage: z.string().nullable(),
+  id: z.number(),
+  imdb_id: z.string().nullable(),
+  origin_country: z.array(z.string()),
+  original_language: z.string(),
+  original_title: z.string(),
+  overview: z.string().nullable(),
+  popularity: z.number(),
+  poster_path: z.string().nullable(),
+  production_companies: z.array(ProductionCompanySchema),
+  production_countries: z.array(ProductionCountrySchema),
+  release_date: z.string(),
+  revenue: z.number(),
+  runtime: z.number().nullable(),
+  spoken_languages: z.array(SpokenLanguageSchema),
+  status: z.string(),
+  tagline: z.string().nullable(),
+  title: z.string(),
+  video: z.boolean(),
+  vote_average: z.number(),
+  vote_count: z.number(),
+});
+
 // --- Type definitions inferred from Zod schemas ---
 export type PopularMovieItem = z.infer<typeof PopularMovieItemSchema>;
 export type PopularMoviesApiResponse = z.infer<
@@ -55,6 +103,7 @@ export type Genre = z.infer<typeof GenreSchema>;
 export type MovieGenresApiResponse = z.infer<
   typeof MovieGenresApiResponseSchema
 >;
+export type MovieDetail = z.infer<typeof MovieDetailSchema>;
 
 // --- Service-Level Functions ---
 
@@ -159,14 +208,18 @@ export const movieQueries = {
     staleTime: 1000 * 60 * 5,
   }),
 
-  // Example for movie details:
-  // detailsBase: () => [...movieQueries.all(), 'detail'] as const,
-  // detail: (id: number) =>
-  //   queryOptions({
-  //     queryKey: [...movieQueries.detailsBase(), id] as const,
-  //     queryFn: () => getMovieDetails(id), // Assuming getMovieDetails function exists
-  //     staleTime: 1000 * 60 * 5,
-  //   }),
+  detailsBase: () => [...movieQueries.all(), "detail"] as const,
+  detail: (movieId: number) =>
+    queryOptions<
+      MovieDetail,
+      Error,
+      MovieDetail,
+      readonly ["movies", "detail", number]
+    >({
+      queryKey: [...movieQueries.detailsBase(), movieId] as const,
+      queryFn: () => getMovieDetails(movieId),
+      staleTime: 1000 * 60 * 15, // Cache movie details for 15 minutes
+    }),
 };
 
 // --- Custom Hooks using Query Factory ---
@@ -290,19 +343,66 @@ export const useMovieGenres = () => {
   return useQuery(movieQueries.genresList());
 };
 
+/**
+ * Fetches details for a specific movie from TMDB.
+ * @param movieId - The ID of the movie to fetch details for.
+ * @returns A promise that resolves to the movie details.
+ */
+export const getMovieDetails = (movieId: number): Promise<MovieDetail> => {
+  return apiRequest({
+    method: "GET",
+    endpoint: `/movie/${movieId}`,
+    schema: MovieDetailSchema,
+    params: {
+      language: "en-US",
+    },
+    headers: {
+      accept: "application/json",
+    },
+  });
+};
+
 // --- Custom Hook for Searching Movies ---
 /**
  * Custom hook to search movies using Tanstack Query.
  * @param query - The search query string.
- * @param page - The page number to fetch.
- * @returns The result of the useQuery hook for search results.
+ * @returns The result of the useInfiniteQuery hook for search results.
  */
 export const useSearchMovies = (query: string) => {
   const options = movieQueries.searchList(query);
-  // Let TypeScript infer types from the options object for useInfiniteQuery
-  // TQueryFnData is PopularMoviesApiResponse, TError is Error, TPageParam is number
-  // The resulting data type will be InfiniteData<PopularMoviesApiResponse, number>
   return useInfiniteQuery(options);
+};
+
+// --- Custom Hook for Movie Details ---
+/**
+ * Custom hook to fetch movie details using Tanstack Query.
+ * @param movieId - The ID of the movie.
+ * @param options - Optional query options.
+ * @returns The result of the useQuery hook for movie details.
+ */
+export const useMovieDetails = (
+  movieId: number,
+  // Simplify options type to avoid deep TQueryKey conflicts, let useQuery handle merging with factoryOptions.queryKey
+  options?: Omit<
+    UseQueryOptions<
+      MovieDetail,
+      Error,
+      MovieDetail,
+      readonly ["movies", "detail", number]
+    >,
+    "queryKey" | "queryFn"
+  >
+) => {
+  const factoryOptions = movieQueries.detail(movieId);
+  return useQuery<
+    MovieDetail,
+    Error,
+    MovieDetail,
+    readonly ["movies", "detail", number]
+  >({
+    ...factoryOptions,
+    ...options,
+  });
 };
 
 // Helper function to construct full image URLs
