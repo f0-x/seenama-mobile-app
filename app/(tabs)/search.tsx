@@ -297,17 +297,6 @@ const SearchResultsContent: React.FC<SearchResultsContentProps> = ({
     );
   }
 
-  if (movies.length === 0) {
-    return (
-      <View className="flex-1 justify-center items-center mx-4 p-4 bg-gray-800/30 rounded-lg">
-        <Text className="text-gray-300 text-center">
-          {debouncedSearchQuery || selectedGenreIdsCount > 0
-            ? "No movies found matching your criteria."
-            : "No movies to display. Try searching or selecting a genre."}
-        </Text>
-      </View>
-    );
-  }
 
   return (
     <FlatList
@@ -315,21 +304,31 @@ const SearchResultsContent: React.FC<SearchResultsContentProps> = ({
       renderItem={renderMovieItem}
       keyExtractor={(item, index) => `${item.id}-${index}`}
       numColumns={2}
-      className="flex-1" 
+      className="flex-1" // Added flex-1 to ensure it tries to fill available space
       contentContainerStyle={{
         paddingHorizontal: 12,
-        paddingBottom: 20,
+        paddingBottom: 20, // This padding is for content within the list
       }}
       onEndReached={() => {
-        if (fetchNextPage && hasNextPage && !isFetchingNextPage) {
+        // Only call fetchNextPage if there's a search query, there's a next page, and not already fetching
+        if (debouncedSearchQuery && fetchNextPage && hasNextPage && !isFetchingNextPage) {
           fetchNextPage();
         }
       }}
       onEndReachedThreshold={0.5}
       ListFooterComponent={
-        isFetchingNextPage ? (
+        isFetchingNextPage && debouncedSearchQuery ? ( // Show footer only when fetching search results
           <ActivityIndicator size="small" color="#FFF" className="my-4" />
         ) : null
+      }
+      ListEmptyComponent={
+        <View className="flex-1 justify-center items-center mt-10">
+          <Text className="text-gray-300 text-center">
+            {debouncedSearchQuery || selectedGenreIdsCount > 0
+              ? "No movies found matching your criteria."
+              : "No movies to display. Try searching or selecting a genre."}
+          </Text>
+        </View>
       }
     />
   );
