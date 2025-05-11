@@ -1,6 +1,7 @@
 import LatestMovieCard from "@/components/LatestMovieCard";
 import SearchBar from "@/components/search_bar";
 import { images } from "@/constants/images";
+import { logSearchMetric, MetricData } from "@/services/appwrite"; // Import Appwrite logging
 import {
   Genre, // For initial/empty search state
   getImageUrl,
@@ -81,6 +82,8 @@ export default function SearchScreen() {
     new Set()
   );
   const [, startTransition] = useTransition();
+  const [lastLoggedQuery, setLastLoggedQuery] = useState<string | null>(null);
+
 
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
@@ -163,6 +166,36 @@ export default function SearchScreen() {
     selectedGenreIds,
     shouldFetchDiscover,
   ]);
+
+  // Effect for logging search metrics
+  useEffect(() => {
+    // Log only when a debounced search query is active, results are available,
+    // not currently loading these specific results, and this query hasn't been logged yet.
+    if (debouncedSearchQuery && !isLoadingSearchRaw && searchResultsData?.pages && searchResultsData.pages.length > 0) {
+      if (debouncedSearchQuery !== lastLoggedQuery) {
+        const firstPageResults = searchResultsData.pages[0]?.results || [];
+        // Log top N results, e.g., up to 3-5
+        const resultsToLog = firstPageResults.slice(0, 5);
+
+        resultsToLog.forEach(async (movie: MovieItemType) => {
+          const imageUrl = getImageUrl(movie.poster_path, "w500"); // Use w500 for cover_img_url
+          if (imageUrl) { // Only log if we have a cover image URL
+            // Construct an object matching Omit<MetricData, 'search_count'>
+            const metricForLogging: Omit<MetricData, 'search_count'> = {
+              search_term: debouncedSearchQuery,
+              search_word_count: debouncedSearchQuery.trim().split(/\s+/).length,
+              cover_img_url: imageUrl,
+              movie_id: movie.id,
+              movie_title: movie.title,
+            };
+            await logSearchMetric(metricForLogging);
+          }
+        });
+        setLastLoggedQuery(debouncedSearchQuery);
+      }
+    }
+  }, [debouncedSearchQuery, searchResultsData, isLoadingSearchRaw, lastLoggedQuery]);
+  // Added isLoadingSearchRaw to dependencies and searchResultsData directly instead of .pages
 
   const renderMovieItem = ({ item }: { item: MovieItemType }) => {
     const cardData: MovieCardDataType = {
