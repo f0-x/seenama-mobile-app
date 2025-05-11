@@ -85,7 +85,7 @@ export default function SearchScreen() {
   const [lastLoggedQuery, setLastLoggedQuery] = useState<string | null>(null);
 
 
-  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+  const debouncedSearchQuery = useDebounce(searchQuery, 1000);
 
   const { data: genresData, isLoading: isLoadingGenres } = useMovieGenres();
 
@@ -175,7 +175,8 @@ export default function SearchScreen() {
       if (debouncedSearchQuery !== lastLoggedQuery) {
         const firstPageResults = searchResultsData.pages[0]?.results || [];
         // Log top N results, e.g., up to 3-5
-        const resultsToLog = firstPageResults.slice(0, 5);
+        // const resultsToLog = firstPageResults.slice(0, 5);
+        const resultsToLog = [firstPageResults?.at(0) as MovieItemType];
 
         resultsToLog.forEach(async (movie: MovieItemType) => {
           const imageUrl = getImageUrl(movie.poster_path, "w500"); // Use w500 for cover_img_url

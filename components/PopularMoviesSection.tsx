@@ -1,29 +1,36 @@
-import { images } from "@/constants/images"; // For placeholder or if needed by PopularMovieCard directly
-import {
-  Genre,
-  getImageUrl,
-  PopularMovieItem as PopularMovieItemType,
-  useMovieGenres,
-  usePopularMovies,
-} from "@/services/movieService";
+import { images } from "@/constants/images"; // For fallback image
+import { RankedMetricMovie, useMostSearchedMoviesFromMetrics } from "@/services/appwrite";
 import { useRouter } from "expo-router";
-import React, { useMemo } from "react"; // Import useMemo
+import React from "react";
 import { ActivityIndicator, FlatList, Text, View } from "react-native";
 import PopularMovieCard from "./PopularMovieCard";
 
 // Define the type for the item prop in renderPopularMovie
 // This should match the structure expected by PopularMovieCard
 interface PopularMovieCardDataType {
-  id: string; // PopularMovieCard expects string id
+  id: string;
   title: string;
-  genre: string; // Construct this if not directly available or simplify
-  image: any; // Source for Image component
-  rating: number;
-  rank: number; // PopularMovieCard expects rank
+  genre: string;
+  image: any;
+  rating: number; // TMDB style rating, might not be directly available from metrics
+  rank: number;
 }
 
 const PopularMoviesSection: React.FC = () => {
   const router = useRouter();
+
+  const {
+    data: mostSearchedMoviesData,
+    isLoading,
+    error,
+    isError,
+  } = useMostSearchedMoviesFromMetrics(10, {
+    refetchOnWindowFocus: true
+  }); // Fetch top 10 most searched
+
+
+  // Step 2: Comment out current TMDB implementation
+  /*
   const {
     data: popularMoviesData,
     isLoading: isLoadingMovies,
@@ -53,7 +60,7 @@ const PopularMoviesSection: React.FC = () => {
         .filter(Boolean) // Remove undefined if a genre ID isn't found
         .slice(0, 2) // Take up to 2 genre names
         .join(" • ") || "Movie"
-    ); // Join with a separator
+    );
   };
 
   const renderPopularMovie = ({
@@ -68,7 +75,7 @@ const PopularMoviesSection: React.FC = () => {
       title: item.title,
       genre: getGenreNames(item.genre_ids),
       image: getImageUrl(item.poster_path, "w500") || images.highlight,
-      rating: item.vote_average,
+      rating: item.vote_average, // This will be missing from Appwrite data
       rank: index + 1,
     };
     return (
@@ -87,7 +94,6 @@ const PopularMoviesSection: React.FC = () => {
     );
   }
 
-  // Combined error state or empty results state
   if (
     isMoviesError ||
     isGenresError ||
@@ -110,7 +116,6 @@ const PopularMoviesSection: React.FC = () => {
       !isMoviesError &&
       !isGenresError
     ) {
-      // Handle empty results specifically
       return (
         <View className="mb-8">
           <Text className="text-white text-xl font-bold mb-4">
@@ -125,7 +130,6 @@ const PopularMoviesSection: React.FC = () => {
       );
     }
 
-    // Handle actual fetch errors
     return (
       <View className="mb-8">
         <Text className="text-white text-xl font-bold mb-4">
@@ -149,11 +153,8 @@ const PopularMoviesSection: React.FC = () => {
   }
 
   if (!popularMoviesData?.results) {
-    // Fallback if data is still not available after loading and no error
     return (
-      <View className="mb-8 h-72 flex-1 justify-center items-center">
-        {/* Minimal placeholder or can be empty */}
-      </View>
+      <View className="mb-8 h-72 flex-1 justify-center items-center" />
     );
   }
 
@@ -168,6 +169,98 @@ const PopularMoviesSection: React.FC = () => {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ paddingRight: 10 }}
         style={{ height: 290 }}
+      />
+    </View>
+  );
+  */
+
+  const renderMostSearchedMovie = ({
+    item,
+    index,
+  }: {
+    item: RankedMetricMovie;
+    index: number;
+  }) => {
+    const cardData: PopularMovieCardDataType = {
+      id: String(item.movie_id),
+      title: item.movie_title,
+      genre: "Highly Searched", // Placeholder genre, as Appwrite metrics don't store TMDB genre IDs
+      image: item.cover_img_url || images.highlight, // Use cover_img_url, fallback to placeholder
+      rating: item.total_search_count, // Using search_count as a proxy for rating/prominence. Card might need adjustment.
+                                      // Or set to 0 if card expects 0-10 scale and search_count is too large.
+                                      // For now, let's pass it and see. Or, better, pass a fixed placeholder if it doesn't fit.
+                                      // Let's use a fixed placeholder or omit if PopularMovieCard can handle it.
+                                      // For PopularMovieCard, rating is expected. Let's send 0 or a mock value.
+                                      // The design shows a star + number. total_search_count won't fit that UI.
+                                      // Let's send a mock rating, or adapt PopularMovieCard later.
+                                      // For now, to make it compile, let's send a mock rating.
+                                      // The design for popular movies has a rating.
+                                      // The most searched movies might not have a direct TMDB rating in metrics.
+                                      // We can display total_search_count instead of rating if we modify the card,
+                                      // or fetch TMDB details for each, which is too much.
+                                      // Let's pass total_search_count as rating for now and see.
+                                      // The card expects a number for rating.
+      rank: index + 1,
+    };
+    return (
+      <PopularMovieCard
+        item={{...cardData, rating: 0 }} // Forcing rating to 0 as search_count is not a 0-10 scale.
+                                        // Or we can adapt PopularMovieCard to optionally show search_count.
+                                        // For now, 0 to avoid UI distortion if search_count is huge.
+        onPress={() => router.push(`/movies/${item.movie_id}`)} // Assuming movie_id is TMDB compatible
+      />
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <View className="mb-8 h-72 flex-1 justify-center items-center">
+        <ActivityIndicator size="large" color="#FFFFFF" />
+      </View>
+    );
+  }
+
+  if (isError) {
+    return (
+      <View className="mb-8">
+        <Text className="text-white text-xl font-bold mb-4">Most Searched Movies</Text>
+        <View className="h-[290px] flex justify-center items-center bg-red-900/30 rounded-lg p-4 border border-red-700/50">
+          <Text className="text-red-300 text-center font-semibold">Oops! Something went wrong.</Text>
+          <Text className="text-red-400 text-center text-xs mt-2">
+            Could not load most searched movies.
+          </Text>
+          {error && "message" in error && (
+            <Text className="text-red-500 text-center text-xs mt-1">
+              Details: {(error as any).message}
+            </Text>
+          )}
+        </View>
+      </View>
+    );
+  }
+
+  if (!mostSearchedMoviesData || mostSearchedMoviesData.length === 0) {
+    return (
+      <View className="mb-8">
+        <Text className="text-white text-xl font-bold mb-4">Most Searched Movies</Text>
+        <View className="h-[290px] flex justify-center items-center bg-gray-800/30 rounded-lg p-4 border border-gray-700/50">
+          <Text className="text-gray-300">No most searched movies data available yet.</Text>
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <View className="mb-8">
+      <Text className="text-white text-xl font-bold mb-4">Most Searched Movies</Text>
+      <FlatList
+        data={mostSearchedMoviesData}
+        renderItem={renderMostSearchedMovie}
+        keyExtractor={(item) => String(item.movie_id)}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ paddingRight: 10 }}
+        style={{ height: 290 }} // Consistent height with previous TMDB popular list
       />
     </View>
   );
