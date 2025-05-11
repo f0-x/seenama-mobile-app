@@ -20,10 +20,10 @@ const LatestMovieCard: React.FC<LatestMovieCardProps> = ({ item, onPress }) => {
   const imageSource =
     typeof item.image === "string" ? { uri: item.image } : item.image;
   return (
-    <TouchableOpacity onPress={onPress} className="w-[48%] mb-5">
+    <TouchableOpacity onPress={onPress} className="w-[48%] mx-1 mb-5">
       <Image
-        source={imageSource}
-        className="w-full h-60 rounded-lg"
+        source={imageSource} // Use the processed imageSource
+        className="w-full h-60 rounded-lg bg-pink-500" // Added debug background
         resizeMode="cover"
       />
       <View className="absolute top-2 right-2 bg-black/60 p-1 rounded-full">

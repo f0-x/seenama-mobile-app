@@ -1,4 +1,9 @@
-import { queryOptions, useQuery } from "@tanstack/react-query";
+import {
+  queryOptions,
+  useInfiniteQuery,
+  useQuery,
+  UseQueryOptions, // Ensure UseQueryOptions is imported
+} from "@tanstack/react-query";
 import { z } from "zod";
 import { apiRequest, TMDB_CONFIG } from "./api"; // Assuming api.ts is in the same directory
 
@@ -103,22 +108,32 @@ export const getLatestMovies = (
 
 // --- Query Factory for Movies (Consolidated) ---
 export const movieQueries = {
-  all: () => ["movies"] as const, // Base key for all movie-related queries
+  all: () => ["movies"] as const,
 
   popularLists: () => [...movieQueries.all(), "popular"] as const,
   popularList: (page: number = 1) =>
-    queryOptions({
-      queryKey: [...movieQueries.popularLists(), page] as const,
+    queryOptions<
+      PopularMoviesApiResponse,
+      Error,
+      PopularMoviesApiResponse,
+      readonly ["movies", "popular", number]
+    >({
+      queryKey: [...movieQueries.popularLists(), page] as const, // Matches TQueryKey
       queryFn: () => getPopularMovies(page),
-      staleTime: 1000 * 60 * 5, // 5 minutes stale time
+      staleTime: 1000 * 60 * 5,
     }),
 
   latestLists: () => [...movieQueries.all(), "latest"] as const,
   latestList: (page: number = 1) =>
-    queryOptions({
-      queryKey: [...movieQueries.latestLists(), page] as const,
+    queryOptions<
+      PopularMoviesApiResponse,
+      Error,
+      PopularMoviesApiResponse,
+      readonly ["movies", "latest", number]
+    >({
+      queryKey: [...movieQueries.latestLists(), page] as const, // Matches TQueryKey
       queryFn: () => getLatestMovies(page),
-      staleTime: 1000 * 60 * 10, // 10 minutes stale time
+      staleTime: 1000 * 60 * 10,
     }),
 
   genresList: () =>
@@ -127,6 +142,22 @@ export const movieQueries = {
       queryFn: () => getMovieGenres(),
       staleTime: 1000 * 60 * 60 * 24, // 24 hours stale time, genres don't change often
     }),
+
+  searchLists: () => [...movieQueries.all(), "search"] as const,
+  searchList: (query: string) => ({
+    // Returns the full options object for useInfiniteQuery
+    queryKey: [...movieQueries.searchLists(), query] as const,
+    queryFn: ({ pageParam = 1 }: { pageParam?: number }) =>
+      searchMovies(query, pageParam as number), // Ensure pageParam is number
+    initialPageParam: 1,
+    getNextPageParam: (lastPage: PopularMoviesApiResponse) => {
+      return lastPage.page < lastPage.total_pages
+        ? lastPage.page + 1
+        : undefined;
+    },
+    enabled: !!query && query.trim().length > 0,
+    staleTime: 1000 * 60 * 5,
+  }),
 
   // Example for movie details:
   // detailsBase: () => [...movieQueries.all(), 'detail'] as const,
@@ -145,17 +176,91 @@ export const movieQueries = {
  * @param page - The page number to fetch.
  * @returns The result of the useQuery hook.
  */
-export const usePopularMovies = (page: number = 1) => {
-  return useQuery(movieQueries.popularList(page));
+export const usePopularMovies = (
+  page: number = 1,
+  options?: Omit<
+    UseQueryOptions<
+      PopularMoviesApiResponse,
+      Error,
+      PopularMoviesApiResponse,
+      readonly ["movies", "popular", number]
+    >,
+    "queryKey" | "queryFn"
+  >
+) => {
+  const factoryOptions = movieQueries.popularList(page);
+  return useQuery(
+    // <
+    //   PopularMoviesApiResponse,
+    //   Error,
+    //   PopularMoviesApiResponse,
+    //   typeof factoryOptions.queryKey
+    // >
+    {
+      ...factoryOptions,
+      ...options,
+    }
+  );
 };
 
 /**
  * Custom hook to fetch latest movies using Tanstack Query with queryOptions.
  * @param page - The page number to fetch.
+ * @param options - Optional query options to pass to the hook.
  * @returns The result of the useQuery hook.
  */
-export const useLatestMovies = (page: number = 1) => {
-  return useQuery(movieQueries.latestList(page));
+export const useLatestMovies = (
+  page: number = 1,
+  options?: Omit<
+    UseQueryOptions<
+      PopularMoviesApiResponse,
+      Error,
+      PopularMoviesApiResponse,
+      readonly ["movies", "latest", number]
+    >,
+    "queryKey" | "queryFn"
+  >
+) => {
+  const factoryOptions = movieQueries.latestList(page);
+  return useQuery(
+    // <
+    // PopularMoviesApiResponse,
+    // Error,
+    // PopularMoviesApiResponse,
+    // typeof factoryOptions.queryKey
+    // >
+    {
+      ...factoryOptions,
+      ...options,
+    }
+  );
+};
+
+/**
+ * Searches for movies on TMDB.
+ * @param query - The search query string.
+ * @param page - The page number to fetch.
+ * @returns A promise that resolves to the search results API response.
+ */
+export const searchMovies = (
+  query: string,
+  page: number = 1
+): Promise<PopularMoviesApiResponse> => {
+  // Reusing PopularMoviesApiResponseSchema
+  return apiRequest({
+    method: "GET",
+    endpoint: "/search/movie",
+    schema: PopularMoviesApiResponseSchema, // Reusing schema
+    params: {
+      query: query,
+      include_adult: false,
+      language: "en-US",
+      page: page,
+    },
+    headers: {
+      accept: "application/json",
+    },
+  });
 };
 
 /**
@@ -183,6 +288,21 @@ export const getMovieGenres = (): Promise<MovieGenresApiResponse> => {
  */
 export const useMovieGenres = () => {
   return useQuery(movieQueries.genresList());
+};
+
+// --- Custom Hook for Searching Movies ---
+/**
+ * Custom hook to search movies using Tanstack Query.
+ * @param query - The search query string.
+ * @param page - The page number to fetch.
+ * @returns The result of the useQuery hook for search results.
+ */
+export const useSearchMovies = (query: string) => {
+  const options = movieQueries.searchList(query);
+  // Let TypeScript infer types from the options object for useInfiniteQuery
+  // TQueryFnData is PopularMoviesApiResponse, TError is Error, TPageParam is number
+  // The resulting data type will be InfiniteData<PopularMoviesApiResponse, number>
+  return useInfiniteQuery(options);
 };
 
 // Helper function to construct full image URLs

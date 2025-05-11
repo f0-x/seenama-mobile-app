@@ -13,7 +13,7 @@ import LatestMovieCard from "./LatestMovieCard";
 
 // Define the type for the item prop in LatestMovieCard
 // This should match the structure expected by LatestMovieCard
-interface LatestMovieCardDataType {
+export interface LatestMovieCardDataType {
   id: string;
   title: string;
   genre: string;

@@ -8,8 +8,6 @@ import { Image, ScrollView, View } from "react-native"; // Removed FlatList, Tex
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const Home = () => {
-  // popularMoviesData and latestMoviesData are now fetched by their respective section components
-  // renderPopularMovie and renderLatestMovie functions are also handled by their respective section components
   const router = useRouter();
 
   return (
